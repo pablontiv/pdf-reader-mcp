@@ -1,13 +1,13 @@
-# /implement Implementa un prd
+# /implement Implement a PRD
 
-Implementa un [prd] existente basado en las [instrucciones] dadas
+Implements an existing [prd] based on the given [instructions]
 
-## Condiciones
+## Conditions
 
-- Evalua las [instrucciones] dadas y busca en @docs/prd/ por un [prd] que cumpla con el numero o nombre mencionado
+- Evaluate the given [instructions] and search in @docs/prd/ for a [prd] that meets the mentioned number or name
 
-## Resultados esperados
+## Expected Results
 
-- Implementacion completa del [prd]
-- Validacion segun los "Criterios de validacion o aceptacion"
-- "Reporte de implementacion" (debe mostrarse al usuario como resumen y agregarse al prd original previa confirmacion del usuario)
+- Complete implementation of the [prd]
+- Validation according to the "Validation or acceptance criteria"
+- "Implementation report" (should be shown to the user as a summary and added to the original PRD with prior user confirmation)

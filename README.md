@@ -28,6 +28,107 @@ Start the server:
 npm start
 ```
 
+## Client Configuration
+
+This MCP server can be used with various AI applications and development tools. Below are configuration instructions for the most popular clients:
+
+### Claude Desktop
+
+Add this configuration to your Claude Desktop config file:
+
+**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "pdf-reader": {
+      "command": "node",
+      "args": ["/path/to/pdf-reader-mcp/dist/index.js"],
+      "env": {
+        "PDF_MAX_FILE_SIZE": "104857600",
+        "LOG_LEVEL": "info"
+      }
+    }
+  }
+}
+```
+
+### VS Code and VS Code-based Editors
+
+For VS Code, Cursor, Windsurf, and other VS Code-based editors, install an MCP extension:
+
+1. Install the MCP extension from the marketplace
+2. Add this configuration to your `settings.json`:
+
+```json
+{
+  "mcp.servers": {
+    "pdf-reader": {
+      "command": "node",
+      "args": ["/path/to/pdf-reader-mcp/dist/index.js"]
+    }
+  }
+}
+```
+
+### ChatGPT Desktop
+
+For ChatGPT Desktop (available since OpenAI's MCP adoption in March 2025):
+
+1. Go to Settings → Integrations → MCP Servers
+2. Add new server with:
+   - **Name:** PDF Reader
+   - **Command:** `node /path/to/pdf-reader-mcp/dist/index.js`
+
+### Claude Code
+
+**Option 1: Command Line (Recommended)**
+
+Unix/macOS:
+```bash
+# Add the MCP server directly via command line
+claude mcp add pdf-reader node /path/to/pdf-reader-mcp/dist/index.js
+
+# With environment variables
+claude mcp add pdf-reader -e PDF_MAX_FILE_SIZE=104857600 -e LOG_LEVEL=info -- node /path/to/pdf-reader-mcp/dist/index.js
+
+# Set scope (optional: --scope local|project|user)
+claude mcp add --scope project pdf-reader node /path/to/pdf-reader-mcp/dist/index.js
+```
+
+Windows:
+```cmd
+rem Add the MCP server directly via command line
+claude mcp add pdf-reader node C:\path\to\pdf-reader-mcp\dist\index.js
+
+rem With environment variables
+claude mcp add pdf-reader -e PDF_MAX_FILE_SIZE=104857600 -e LOG_LEVEL=info -- node C:\path\to\pdf-reader-mcp\dist\index.js
+
+rem Set scope (optional: --scope local|project|user)
+claude mcp add --scope project pdf-reader node C:\path\to\pdf-reader-mcp\dist\index.js
+```
+
+**Option 2: Configuration File**
+Configure in your project's `.claude/settings.json`:
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "pdf-reader": {
+        "command": "node",
+        "args": ["/path/to/pdf-reader-mcp/dist/index.js"]
+      }
+    }
+  }
+}
+```
+
+### Other Clients
+
+For other MCP-compatible applications (Microsoft Copilot Studio, Replit, Zed, etc.), refer to the [official MCP documentation](https://modelcontextprotocol.io) for client-specific configuration instructions.
+
 ### Available Tools
 
 #### 1. extract_pdf_text

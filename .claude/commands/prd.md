@@ -1,23 +1,23 @@
-# /prd [instruccion] Comando para crear documentos PRD
+# /prd [instruction] Command to create PRD documents
 
-Evalua la [instruccion] y crea un documento en la carpeta @docs/prd asignando el siguiente numero disponible segun el formato PRD[nnn]-[funcion].md
+Evaluates the [instruction] and creates a document in the @docs/prd folder assigning the next available number according to the format PRD[nnn]-[function].md
 
-## Condiciones
+## Conditions
 
-- [instruccion] puede referirse a una accion nueva, o a una fase de otro documento en @docs/prd/
-- Haz todas las preguntas necesarias para aclarar la instruccion antes de empezar a trabajar
-- Si la [instruccion] implica tareas no atomicas (ver Resultado esperado) se debe confirmar con el usuario si desea crear multiples prd's
+- [instruction] can refer to a new action, or a phase of another document in @docs/prd/
+- Ask all necessary questions to clarify the instruction before starting work
+- If the [instruction] involves non-atomic tasks (see Expected Result) confirmation should be obtained from the user whether to create multiple PRDs
 
-## Resultado esperado
+## Expected Result
 
-- Un objetivo claro y atomico (un servicio, una configuracion, o cualquier cambio que pueda ser probado individualmente y aporte valor segun la [instruccion])
-- Una lista de tareas secuenciales que puedan ser probadas y revertidas una a una
-- Criterios de validacion o aceptacion (en caso de que aplique se debe exigir validacion de cliente lan con un network namespace)
-- Reporte de la implementacion, incluyendo pero no limitado a:
-  - Nombre de servicio
-  - Ruta de acceso
-  - Archivos de configuracion
-  - IP's y puertos
-  - Credenciales
-  - Dependencias
-  - Estrategia de rollback
+- A clear and atomic objective (a service, a configuration, or any change that can be tested individually and provides value according to the [instruction])
+- A list of sequential tasks that can be tested and reverted one by one
+- Validation or acceptance criteria (if applicable, LAN client validation with a network namespace should be required)
+- Implementation report, including but not limited to:
+  - Service name
+  - Access path
+  - Configuration files
+  - IPs and ports
+  - Credentials
+  - Dependencies
+  - Rollback strategy
