@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "pdf-extraction": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npm",
+        "start"
+      ],
+      "cwd": "C:\\Users\\pablo\\OneDrive\\src\\pdf-reader",
+      "env": {}
+    }
+  }
+}
