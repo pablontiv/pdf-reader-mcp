@@ -1,5 +1,11 @@
 # PDF Reader MCP Server
 
+[![CI/CD Pipeline](https://github.com/pablontiv/pdf-reader-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/pablontiv/pdf-reader-mcp/actions/workflows/ci.yml)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue)](https://www.typescriptlang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![npm package](https://img.shields.io/badge/npm-package-orange)](https://www.npmjs.com/)
+
 A Model Context Protocol (MCP) server for extracting and processing content from PDF documents. This server provides secure, efficient, and flexible PDF content extraction capabilities following the MCP specification.
 
 ## Features
