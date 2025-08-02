@@ -11,6 +11,40 @@ A Model Context Protocol (MCP) server for extracting and processing content from
 - **Security-First**: Input validation and sandboxed processing
 - **Type-Safe**: Full TypeScript implementation with comprehensive type definitions
 
+## Why Choose This MCP Server?
+
+### 🎯 **Specialized PDF Tools**
+- **4 dedicated tools** for different PDF processing needs (text, metadata, pages, validation)
+- **Granular control** - extract specific pages, preserve formatting, or get structured output
+- **Flexible page ranges** - support for "1-5", "1,3,5", or "all" syntax
+
+### 🛡️ **Enterprise-Grade Security**
+- **Directory traversal protection** prevents unauthorized file access
+- **File size limits** (configurable up to 100MB by default)
+- **Processing timeouts** prevent resource exhaustion
+- **Memory usage controls** (500MB limit by default)
+- **No temporary file persistence** - secure processing without data leakage
+
+### ⚡ **Production-Ready Architecture**
+- **Robust error handling** with standardized MCP error codes (-32602 to -32605)
+- **Structured logging** with Winston for monitoring and debugging
+- **Comprehensive input validation** using Zod schemas
+- **Type-safe TypeScript** implementation with full type definitions
+- **Concurrent processing support** for multiple PDF operations
+
+### 🔧 **Developer Experience**
+- **Easy configuration** via environment variables
+- **Flexible deployment** - works with 70+ MCP-compatible clients
+- **Clear documentation** with real-world examples
+- **Modern tech stack** - TypeScript, pdf-parse, pdf-lib
+- **Test coverage** with Vitest for reliability
+
+### 📊 **Performance Optimized**
+- **Efficient PDF processing** optimized for text-based documents
+- **Configurable resource limits** to match your infrastructure
+- **Minimal dependencies** for faster startup and lower memory footprint
+- **Streaming support** for large document processing
+
 ## Installation
 
 ```bash
