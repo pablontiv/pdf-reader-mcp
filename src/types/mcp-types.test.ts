@@ -10,11 +10,11 @@ import { z } from 'zod';
 describe('MCP Types Validation', () => {
   describe('ExtractTextParamsSchema', () => {
     it('should validate minimal valid parameters', () => {
-      const validParams = { file_path: '/test/document.pdf' };
+      const validParams = { file_path: 'src/test-fixtures/document.pdf' };
       
       const result = ExtractTextParamsSchema.parse(validParams);
       
-      expect(result.file_path).toBe('/test/document.pdf');
+      expect(result.file_path).toBe('src/test-fixtures/document.pdf');
       expect(result.preserve_formatting).toBe(true); // default
       expect(result.include_metadata).toBe(false); // default
       expect(result.pages).toBe('all'); // default
@@ -22,7 +22,7 @@ describe('MCP Types Validation', () => {
 
     it('should validate all parameters with explicit values', () => {
       const validParams = {
-        file_path: '/test/document.pdf',
+        file_path: 'src/test-fixtures/document.pdf',
         pages: '1-5',
         preserve_formatting: false,
         include_metadata: true
@@ -30,7 +30,7 @@ describe('MCP Types Validation', () => {
       
       const result = ExtractTextParamsSchema.parse(validParams);
       
-      expect(result.file_path).toBe('/test/document.pdf');
+      expect(result.file_path).toBe('src/test-fixtures/document.pdf');
       expect(result.pages).toBe('1-5');
       expect(result.preserve_formatting).toBe(false);
       expect(result.include_metadata).toBe(true);
@@ -102,11 +102,11 @@ describe('MCP Types Validation', () => {
 
   describe('ExtractMetadataParamsSchema', () => {
     it('should validate valid file path', () => {
-      const validParams = { file_path: '/test/document.pdf' };
+      const validParams = { file_path: 'src/test-fixtures/document.pdf' };
       
       const result = ExtractMetadataParamsSchema.parse(validParams);
       
-      expect(result.file_path).toBe('/test/document.pdf');
+      expect(result.file_path).toBe('src/test-fixtures/document.pdf');
     });
 
     it('should accept various file path formats', () => {
@@ -165,20 +165,20 @@ describe('MCP Types Validation', () => {
   describe('ExtractPagesParamsSchema', () => {
     it('should validate required parameters', () => {
       const validParams = {
-        file_path: '/test/document.pdf',
+        file_path: 'src/test-fixtures/document.pdf',
         page_range: '1-5'
       };
       
       const result = ExtractPagesParamsSchema.parse(validParams);
       
-      expect(result.file_path).toBe('/test/document.pdf');
+      expect(result.file_path).toBe('src/test-fixtures/document.pdf');
       expect(result.page_range).toBe('1-5');
       expect(result.output_format).toBe('text'); // default
     });
 
     it('should validate with explicit output format', () => {
       const validParams = {
-        file_path: '/test/document.pdf',
+        file_path: 'src/test-fixtures/document.pdf',
         page_range: '1,3,5',
         output_format: 'structured' as const
       };
@@ -250,11 +250,11 @@ describe('MCP Types Validation', () => {
 
   describe('ValidatePDFParamsSchema', () => {
     it('should validate valid file path', () => {
-      const validParams = { file_path: '/test/document.pdf' };
+      const validParams = { file_path: 'src/test-fixtures/document.pdf' };
       
       const result = ValidatePDFParamsSchema.parse(validParams);
       
-      expect(result.file_path).toBe('/test/document.pdf');
+      expect(result.file_path).toBe('src/test-fixtures/document.pdf');
     });
 
     it('should accept various file path formats', () => {
@@ -344,9 +344,9 @@ describe('MCP Types Validation', () => {
 
     it('should handle Unicode file paths correctly', () => {
       const unicodePaths = [
-        '/test/文档.pdf',
-        '/test/документ.pdf',
-        '/test/document-émojis-🎉.pdf',
+        'src/test-fixtures/文档.pdf',
+        'src/test-fixtures/документ.pdf',
+        'src/test-fixtures/document-émojis-🎉.pdf',
         'C:\\Users\\José\\Documentos\\archivo.pdf'
       ];
 

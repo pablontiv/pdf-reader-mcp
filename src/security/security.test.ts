@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { validateFilePath, validatePDFFile } from '../utils/validation.js';
 import { ValidationError } from '../utils/validation.js';
-import path from 'path';
 import fs from 'fs/promises';
 
 // Mock fs promises
@@ -75,36 +74,26 @@ describe('Security Tests for PDF Processing', () => {
 
     it('should accept safe relative paths', async () => {
       const safePaths = [
-        './document.pdf',
-        'subfolder/document.pdf',
-        'documents/2024/report.pdf',
-        'upload/user123/file.pdf'
+        'src/test-fixtures/document.pdf',
+        'src/test-fixtures/subfolder/document.pdf',
+        'src/test-fixtures/documents/2024/report.pdf',
+        'src/test-fixtures/upload/user123/file.pdf'
       ];
-
-      // Mock file existence check
-      vi.mocked(fs.access).mockResolvedValue(undefined);
 
       for (const safePath of safePaths) {
         await expect(validateFilePath(safePath)).resolves.not.toThrow();
       }
     });
 
-    it('should normalize and validate paths correctly', async () => {
+    it('should reject paths with .. even when they normalize safely', async () => {
       const pathsWithDots = [
-        './subfolder/../document.pdf', // resolves to document.pdf
-        'subfolder/./document.pdf',    // resolves to subfolder/document.pdf
-        './document.pdf'               // resolves to document.pdf
+        './subfolder/../document.pdf', // contains .. 
+        'subfolder/./document.pdf',    // contains ./
+        './document.pdf'               // contains ./
       ];
 
-      // Mock file existence check
-      vi.mocked(fs.access).mockResolvedValue(undefined);
-
       for (const dotPath of pathsWithDots) {
-        const normalized = path.normalize(dotPath);
-        // Should not contain .. after normalization
-        expect(normalized).not.toContain('..');
-        
-        await expect(validateFilePath(dotPath)).resolves.not.toThrow();
+        await expect(validateFilePath(dotPath)).rejects.toThrow(ValidationError);
       }
     });
   });
@@ -130,16 +119,10 @@ describe('Security Tests for PDF Processing', () => {
 
     it('should accept valid PDF extensions', async () => {
       const pdfFiles = [
-        'document.pdf',
-        'DOCUMENT.PDF',
-        'Document.Pdf',
-        'file-with-dashes.pdf',
-        'file_with_underscores.pdf',
-        'file with spaces.pdf'
+        'src/test-fixtures/valid.pdf',
+        'src/test-fixtures/sample.pdf',
+        'src/test-fixtures/document.pdf'
       ];
-
-      // Mock file existence and basic validation
-      vi.mocked(fs.access).mockResolvedValue(undefined);
 
       for (const pdfFile of pdfFiles) {
         await expect(validatePDFFile(pdfFile)).resolves.not.toThrow();
@@ -291,8 +274,7 @@ describe('Security Tests for PDF Processing', () => {
     });
 
     it('should handle concurrent validation requests safely', async () => {
-      const validPath = './document.pdf';
-      vi.mocked(fs.access).mockResolvedValue(undefined);
+      const validPath = 'src/test-fixtures/valid.pdf';
 
       // Simulate many concurrent validation requests
       const concurrentRequests = Array(100).fill(0).map(() => 

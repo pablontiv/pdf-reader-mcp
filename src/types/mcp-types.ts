@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const ExtractTextParamsSchema = z.object({
   file_path: z.string().min(1, "File path is required"),
-  pages: z.string().optional(),
+  pages: z.string().default('all'),
   preserve_formatting: z.boolean().default(true),
   include_metadata: z.boolean().default(false)
 });

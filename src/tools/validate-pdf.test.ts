@@ -69,11 +69,11 @@ describe('Validate PDF Tool', () => {
     it('should validate PDF successfully', async () => {
       mockPDFProcessor.validatePDF.mockResolvedValue(mockValidationResult);
 
-      const args = { file_path: '/test/sample.pdf' };
+      const args = { file_path: 'src/test-fixtures/sample.pdf' };
       const result = await handleValidatePDF(args);
 
       expect(PDFProcessor).toHaveBeenCalled();
-      expect(mockPDFProcessor.validatePDF).toHaveBeenCalledWith('/test/sample.pdf');
+      expect(mockPDFProcessor.validatePDF).toHaveBeenCalledWith('src/test-fixtures/sample.pdf');
       expect(result).toEqual(mockValidationResult);
     });
 
@@ -92,7 +92,7 @@ describe('Validate PDF Tool', () => {
       
       mockPDFProcessor.validatePDF.mockResolvedValue(encryptedResult);
 
-      const args = { file_path: '/test/encrypted.pdf' };
+      const args = { file_path: 'src/test-fixtures/encrypted.pdf' };
       const result = await handleValidatePDF(args);
 
       expect(result.is_encrypted).toBe(true);
@@ -113,7 +113,7 @@ describe('Validate PDF Tool', () => {
       
       mockPDFProcessor.validatePDF.mockResolvedValue(corruptedResult);
 
-      const args = { file_path: '/test/corrupted.pdf' };
+      const args = { file_path: 'src/test-fixtures/corrupted.pdf' };
       const result = await handleValidatePDF(args);
 
       expect(result.is_valid).toBe(false);
@@ -138,7 +138,7 @@ describe('Validate PDF Tool', () => {
       const processingError = new Error('PDF validation failed');
       mockPDFProcessor.validatePDF.mockRejectedValue(processingError);
 
-      const args = { file_path: '/test/sample.pdf' };
+      const args = { file_path: 'src/test-fixtures/sample.pdf' };
       
       try {
         await handleValidatePDF(args);
@@ -168,7 +168,7 @@ describe('Validate PDF Tool', () => {
       const validationError = new ValidationError('Not a PDF file', 'INVALID_FILE_TYPE');
       mockPDFProcessor.validatePDF.mockRejectedValue(validationError);
 
-      const args = { file_path: '/test/document.txt' };
+      const args = { file_path: 'src/test-fixtures/document.txt' };
       
       await expect(handleValidatePDF(args)).rejects.toThrow();
     });
@@ -239,7 +239,7 @@ describe('Validate PDF Tool', () => {
       
       mockPDFProcessor.validatePDF.mockResolvedValue(largeFileResult);
 
-      const args = { file_path: '/test/huge.pdf' };
+      const args = { file_path: 'src/test-fixtures/huge.pdf' };
       const result = await handleValidatePDF(args);
 
       expect(result.file_size_bytes).toBe(Number.MAX_SAFE_INTEGER);
@@ -264,7 +264,7 @@ describe('Validate PDF Tool', () => {
       
       mockPDFProcessor.validatePDF.mockResolvedValue(unusualResult);
 
-      const args = { file_path: '/test/unusual.pdf' };
+      const args = { file_path: 'src/test-fixtures/unusual.pdf' };
       const result = await handleValidatePDF(args);
 
       expect(result.is_valid).toBe(true);
@@ -278,7 +278,7 @@ describe('Validate PDF Tool', () => {
       const testError = new Error('Test validation error');
       mockPDFProcessor.validatePDF.mockRejectedValue(testError);
 
-      const args = { file_path: '/test/sample.pdf' };
+      const args = { file_path: 'src/test-fixtures/sample.pdf' };
       
       try {
         await handleValidatePDF(args);
@@ -291,7 +291,7 @@ describe('Validate PDF Tool', () => {
         expect(errorData).toHaveProperty('message');
         expect(errorData).toHaveProperty('data');
         expect(errorData.data).toHaveProperty('error_type');
-        expect(errorData.data.file_path).toBe('/test/sample.pdf');
+        expect(errorData.data.file_path).toBe('src/test-fixtures/sample.pdf');
       }
     });
 
@@ -304,7 +304,7 @@ describe('Validate PDF Tool', () => {
     it('should provide comprehensive validation results', async () => {
       mockPDFProcessor.validatePDF.mockResolvedValue(mockValidationResult);
 
-      const args = { file_path: '/test/comprehensive.pdf' };
+      const args = { file_path: 'src/test-fixtures/comprehensive.pdf' };
       const result = await handleValidatePDF(args);
 
       // Verify all expected fields are present

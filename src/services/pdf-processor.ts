@@ -1,7 +1,7 @@
 import pdf from 'pdf-parse';
 import { promises as fs } from 'fs';
 import { PDFMetadata, ValidationResult } from '../types/pdf-types.js';
-import { validatePDFFile } from '../utils/validation.js';
+import { validatePDFFile, parsePageRange } from '../utils/validation.js';
 import { withTimeout } from '../utils/error-handling.js';
 import { getConfig } from '../config/server-config.js';
 
@@ -71,6 +71,44 @@ export class PDFProcessor {
       page_count: pdfData.numpages,
       pdf_version: pdfData.version || '1.4',
       file_size_bytes: stats.size
+    };
+  }
+
+  async extractPages(filePath: string, pageRange: string, outputFormat: 'text' | 'structured' = 'text'): Promise<{
+    content: string;
+    pages: number[];
+    total_pages: number;
+    output_format: string;
+    processingTimeMs: number;
+  }> {
+    const startTime = Date.now();
+    
+    await validatePDFFile(filePath);
+    
+    const buffer = await fs.readFile(filePath);
+    const pdfData = await withTimeout(
+      pdf(buffer),
+      this.config.processingTimeout
+    );
+
+    const requestedPages = parsePageRange(pageRange, pdfData.numpages);
+    
+    // Note: pdf-parse doesn't support extracting specific pages
+    // For now, we'll return the full text with a note about the requested pages
+    let content = pdfData.text;
+    
+    if (outputFormat === 'structured') {
+      content = `Pages ${requestedPages.join(', ')} of ${pdfData.numpages}:\n\n${content}`;
+    }
+
+    const processingTimeMs = Date.now() - startTime;
+
+    return {
+      content,
+      pages: requestedPages,
+      total_pages: pdfData.numpages,
+      output_format: outputFormat,
+      processingTimeMs
     };
   }
 

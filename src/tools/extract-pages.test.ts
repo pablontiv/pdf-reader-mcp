@@ -82,7 +82,7 @@ describe('Extract Pages Tool', () => {
       mockPDFProcessor.extractPages.mockResolvedValue(mockPagesResult);
 
       const args = {
-        file_path: '/test/sample.pdf',
+        file_path: 'src/test-fixtures/sample.pdf',
         page_range: '1-2'
       };
       
@@ -90,7 +90,7 @@ describe('Extract Pages Tool', () => {
 
       expect(PDFProcessor).toHaveBeenCalled();
       expect(mockPDFProcessor.extractPages).toHaveBeenCalledWith(
-        '/test/sample.pdf',
+        'src/test-fixtures/sample.pdf',
         '1-2',
         'text' // default output_format
       );
@@ -102,7 +102,7 @@ describe('Extract Pages Tool', () => {
       mockPDFProcessor.extractPages.mockResolvedValue(mockPagesResult);
 
       const args = {
-        file_path: '/test/sample.pdf',
+        file_path: 'src/test-fixtures/sample.pdf',
         page_range: '1,3,5',
         output_format: 'structured' as const
       };
@@ -110,7 +110,7 @@ describe('Extract Pages Tool', () => {
       await handleExtractPages(args);
       
       expect(mockPDFProcessor.extractPages).toHaveBeenCalledWith(
-        '/test/sample.pdf',
+        'src/test-fixtures/sample.pdf',
         '1,3,5',
         'structured'
       );
@@ -123,14 +123,14 @@ describe('Extract Pages Tool', () => {
       });
 
       const args = {
-        file_path: '/test/sample.pdf',
+        file_path: 'src/test-fixtures/sample.pdf',
         page_range: 'all'
       };
       
       const result = await handleExtractPages(args);
       
       expect(mockPDFProcessor.extractPages).toHaveBeenCalledWith(
-        '/test/sample.pdf',
+        'src/test-fixtures/sample.pdf',
         'all',
         'text'
       );
@@ -140,7 +140,7 @@ describe('Extract Pages Tool', () => {
 
     it('should validate input parameters using Zod schema', async () => {
       const invalidArgs = {
-        file_path: '/test/sample.pdf',
+        file_path: 'src/test-fixtures/sample.pdf',
         page_range: 123 // wrong type
       };
       
@@ -148,7 +148,7 @@ describe('Extract Pages Tool', () => {
     });
 
     it('should require both file_path and page_range', async () => {
-      const missingPageRange = { file_path: '/test/sample.pdf' };
+      const missingPageRange = { file_path: 'src/test-fixtures/sample.pdf' };
       const missingFilePath = { page_range: '1-3' };
       
       await expect(handleExtractPages(missingPageRange)).rejects.toThrow();
@@ -160,7 +160,7 @@ describe('Extract Pages Tool', () => {
       mockPDFProcessor.extractPages.mockRejectedValue(processingError);
 
       const args = {
-        file_path: '/test/sample.pdf',
+        file_path: 'src/test-fixtures/sample.pdf',
         page_range: '1-3'
       };
       
@@ -183,7 +183,7 @@ describe('Extract Pages Tool', () => {
       mockPDFProcessor.extractPages.mockRejectedValue(validationError);
 
       const args = {
-        file_path: '/test/sample.pdf',
+        file_path: 'src/test-fixtures/sample.pdf',
         page_range: '0-5' // invalid range
       };
       
@@ -265,7 +265,7 @@ describe('Extract Pages Tool', () => {
       mockPDFProcessor.extractPages.mockResolvedValue(complexResult);
 
       const args = {
-        file_path: '/test/complex.pdf',
+        file_path: 'src/test-fixtures/complex.pdf',
         page_range: '1,5,7-8',
         output_format: 'structured' as const
       };
@@ -283,7 +283,7 @@ describe('Extract Pages Tool', () => {
       mockPDFProcessor.extractPages.mockRejectedValue(testError);
 
       const args = {
-        file_path: '/test/sample.pdf',
+        file_path: 'src/test-fixtures/sample.pdf',
         page_range: '1-3'
       };
       
@@ -292,7 +292,7 @@ describe('Extract Pages Tool', () => {
         expect.fail('Should have thrown an error');
       } catch (error) {
         const errorData = JSON.parse((error as Error).message);
-        expect(errorData.data.file_path).toBe('/test/sample.pdf');
+        expect(errorData.data.file_path).toBe('src/test-fixtures/sample.pdf');
       }
     });
   });

@@ -14,12 +14,34 @@ export async function validateFilePath(filePath: string): Promise<void> {
     throw new ValidationError('File path must be a non-empty string', 'INVALID_PATH');
   }
 
-  const resolvedPath = path.resolve(filePath);
+  // Check for security violations in path
+  const hasDirectoryTraversal = filePath.includes('..') || filePath.includes('~');
+  const isAbsolutePath = path.isAbsolute(filePath);
+  // eslint-disable-next-line no-control-regex
+  const hasControlChars = /[\x00-\x1f\x7f-\x9f]/.test(filePath);
+  const hasNTFSStreams = filePath.includes(':') && process.platform === 'win32';
   
-  if (resolvedPath.includes('..') || resolvedPath.includes('~')) {
-    throw new ValidationError('Directory traversal detected in file path', 'SECURITY_VIOLATION');
+  // Check for Windows reserved names
+  const basename = path.basename(filePath, path.extname(filePath));
+  const windowsReserved = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'LPT1', 'LPT2'];
+  const hasReservedName = windowsReserved.includes(basename.toUpperCase());
+  
+  // Check for encoded directory traversal attempts
+  let hasEncodedTraversal = false;
+  try {
+    const decodedPath = decodeURIComponent(filePath);
+    hasEncodedTraversal = decodedPath.includes('..') || decodedPath.includes('~');
+  } catch (error) {
+    hasEncodedTraversal = true; // Invalid URI encoding is suspicious
   }
 
+  // Throw generic security error for any violation
+  if (hasDirectoryTraversal || isAbsolutePath || hasControlChars || hasNTFSStreams || hasReservedName || hasEncodedTraversal) {
+    throw new ValidationError('Invalid file path', 'SECURITY_VIOLATION');
+  }
+
+  const resolvedPath = path.resolve(filePath);
+  
   try {
     const stats = await fs.stat(resolvedPath);
     
