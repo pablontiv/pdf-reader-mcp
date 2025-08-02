@@ -12,6 +12,21 @@ describe('Validate PDF Tool', () => {
     validatePDF: Mock;
   };
 
+  const mockValidationResult = {
+    is_valid: true,
+    pdf_version: '1.4',
+    is_encrypted: false,
+    is_readable: true,
+    file_size_bytes: 1048576,
+    page_count: 10,
+    security_restrictions: {
+      printing_allowed: true,
+      copying_allowed: true,
+      modification_allowed: true,
+      annotation_allowed: true
+    }
+  };
+
   beforeEach(() => {
     mockPDFProcessor = {
       validatePDF: vi.fn()
@@ -50,20 +65,6 @@ describe('Validate PDF Tool', () => {
   });
 
   describe('Handler Function', () => {
-    const mockValidationResult = {
-      is_valid: true,
-      pdf_version: '1.4',
-      is_encrypted: false,
-      is_readable: true,
-      file_size_bytes: 1048576,
-      page_count: 10,
-      security_restrictions: {
-        printing_allowed: true,
-        copying_allowed: true,
-        modification_allowed: true,
-        annotation_allowed: true
-      }
-    };
 
     it('should validate PDF successfully', async () => {
       mockPDFProcessor.validatePDF.mockResolvedValue(mockValidationResult);

@@ -42,7 +42,7 @@ export class PDFProcessor {
     const processingTimeMs = Date.now() - startTime;
 
     return {
-      text: pdfData.text,
+      text: preserveFormatting ? pdfData.text : pdfData.text.replace(/\s+/g, ' ').trim(),
       pageCount: pdfData.numpages,
       metadata,
       processingTimeMs

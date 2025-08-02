@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { validateFilePath, validatePDFFile, parsePageRange, ValidationError } from '../utils/validation.js';
+import { validateFilePath, parsePageRange, ValidationError } from '../utils/validation.js';
 
 describe('Validation Utils', () => {
   describe('parsePageRange', () => {

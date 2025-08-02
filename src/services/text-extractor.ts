@@ -38,7 +38,8 @@ export class TextExtractor {
         const pageBuffer = await this.extractSinglePage(buffer, pageNum);
         const pageData = await pdf(pageBuffer);
 
-        const content = pageData.text.trim();
+        const rawContent = pageData.text.trim();
+        const content = outputFormat === 'structured' ? rawContent : rawContent.replace(/\s+/g, ' ').trim();
         const wordCount = content ? content.split(/\s+/).length : 0;
 
         pages.push({
