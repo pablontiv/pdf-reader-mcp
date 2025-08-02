@@ -18,7 +18,7 @@ class PDFExtractionServer {
   constructor() {
     this.server = new Server(
       {
-        name: 'pdf-extraction-mcp-server',
+        name: 'pdf-reader-mcp',
         version: '1.0.0',
       },
       {

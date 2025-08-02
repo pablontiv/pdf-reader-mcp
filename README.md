@@ -1,4 +1,4 @@
-# PDF Extraction MCP Server
+# PDF Reader MCP Server
 
 A Model Context Protocol (MCP) server for extracting and processing content from PDF documents. This server provides secure, efficient, and flexible PDF content extraction capabilities following the MCP specification.
 
