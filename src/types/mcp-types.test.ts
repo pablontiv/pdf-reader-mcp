@@ -315,31 +315,31 @@ describe('MCP Types Validation', () => {
 
   describe('Schema Consistency', () => {
     it('should all require file_path parameter', () => {
-      const schemas = [
-        ExtractTextParamsSchema,
-        ExtractMetadataParamsSchema,
-        ExtractPagesParamsSchema,
-        ValidatePDFParamsSchema
+      const testCases = [
+        { schema: ExtractTextParamsSchema, validParams: { file_path: '/test.pdf' } },
+        { schema: ExtractMetadataParamsSchema, validParams: { file_path: '/test.pdf' } },
+        { schema: ExtractPagesParamsSchema, validParams: { file_path: '/test.pdf', page_range: '1-2' } },
+        { schema: ValidatePDFParamsSchema, validParams: { file_path: '/test.pdf' } }
       ];
 
-      schemas.forEach(schema => {
+      testCases.forEach(({ schema, validParams }) => {
         expect(() => schema.parse({})).toThrow(z.ZodError);
-        expect(() => schema.parse({ file_path: '/test.pdf' })).not.toThrow();
+        expect(() => schema.parse(validParams)).not.toThrow();
       });
     });
 
     it('should all validate file_path as string', () => {
-      const schemas = [
-        ExtractTextParamsSchema,
-        ExtractMetadataParamsSchema,
-        ExtractPagesParamsSchema,
-        ValidatePDFParamsSchema
+      const testCases = [
+        { schema: ExtractTextParamsSchema, validParams: { file_path: '/valid/path.pdf' } },
+        { schema: ExtractMetadataParamsSchema, validParams: { file_path: '/valid/path.pdf' } },
+        { schema: ExtractPagesParamsSchema, validParams: { file_path: '/valid/path.pdf', page_range: '1-2' } },
+        { schema: ValidatePDFParamsSchema, validParams: { file_path: '/valid/path.pdf' } }
       ];
 
-      schemas.forEach(schema => {
-        expect(() => schema.parse({ file_path: 123 })).toThrow(z.ZodError);
-        expect(() => schema.parse({ file_path: true })).toThrow(z.ZodError);
-        expect(() => schema.parse({ file_path: '/valid/path.pdf' })).not.toThrow();
+      testCases.forEach(({ schema, validParams }) => {
+        expect(() => schema.parse({ ...validParams, file_path: 123 })).toThrow(z.ZodError);
+        expect(() => schema.parse({ ...validParams, file_path: true })).toThrow(z.ZodError);
+        expect(() => schema.parse(validParams)).not.toThrow();
       });
     });
 
