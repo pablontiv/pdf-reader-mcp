@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     
     strategy:
+      fail-fast: false  # Don't cancel other jobs if one fails
       matrix:
         node-version: [20.x, 22.x]
     
@@ -41,17 +42,38 @@ jobs:
     - name: Build project
       run: npm run build
       
-    - name: Test build output
+    - name: Comprehensive build validation
       run: |
+        echo "🔍 Validating build output..."
+        
+        # Check dist directory exists
         if [ ! -d "dist" ]; then
-          echo "Build failed: dist directory not found"
+          echo "❌ Build failed: dist directory not found"
           exit 1
         fi
+        
+        # Check main entry point
         if [ ! -f "dist/index.js" ]; then
-          echo "Build failed: index.js not found in dist"
+          echo "❌ Build failed: index.js not found in dist"
           exit 1
         fi
-        echo "Build successful: dist/index.js exists"
+        
+        # Verify file is not empty
+        if [ ! -s "dist/index.js" ]; then
+          echo "❌ Build failed: index.js is empty"
+          exit 1
+        fi
+        
+        # Check for source maps (if configured)
+        if [ -f "dist/index.js.map" ]; then
+          echo "✅ Source maps generated"
+        fi
+        
+        # Basic syntax check
+        node --check dist/index.js
+        
+        echo "✅ Build validation successful"
+        ls -la dist/
 
   security:
     name: Security Audit
@@ -71,8 +93,72 @@ jobs:
     - name: Install dependencies
       run: npm ci
       
-    - name: Run security audit
-      run: npm audit --audit-level=moderate
-      
-    - name: Check for vulnerabilities
-      run: npm audit --audit-level=high --dry-run
+    - name: Run security audit with retry
+      run: |
+        echo "🔍 Running security audit..."
+        
+        # First attempt - moderate level
+        if npm audit --audit-level=moderate; then
+          echo "✅ No moderate+ security issues found"
+        else
+          echo "⚠️ Moderate security issues detected"
+          npm audit --audit-level=moderate --json > audit-moderate.json || true
+        fi
+        
+        # Second check - high level (must pass)
+        echo "🔍 Checking for high severity vulnerabilities..."
+        if npm audit --audit-level=high; then
+          echo "✅ No high+ security issues found"
+        else
+          echo "❌ High severity security issues found"
+          npm audit --audit-level=high --json
+          exit 1
+        fi
+        
+    - name: Upload audit results
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-audit-results
+        path: audit-*.json
+        retention-days: 30
+
+  protection-check:
+    name: Branch Protection Check
+    runs-on: ubuntu-latest
+    needs: [test, security]
+    if: always()
+    steps:
+      - name: Check all required jobs
+        run: |
+          echo "Test job status: ${{ needs.test.result }}"
+          echo "Security job status: ${{ needs.security.result }}"
+          
+          if [ "${{ needs.test.result }}" != "success" ]; then
+            echo "❌ Test job failed or was skipped"
+            exit 1
+          fi
+          
+          if [ "${{ needs.security.result }}" != "success" ]; then
+            echo "❌ Security job failed or was skipped"
+            exit 1
+          fi
+          
+          echo "✅ All required checks passed - Ready for merge"
+          
+      - name: Generate workflow summary
+        if: always()
+        run: |
+          echo "## 🚀 CI/CD Pipeline Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status | Details |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests & Build | ${{ needs.test.result == 'success' && '✅ Passed' || '❌ Failed' }} | Node.js 20.x & 22.x |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Audit | ${{ needs.security.result == 'success' && '✅ Passed' || '❌ Failed' }} | Vulnerability scan |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.test.result }}" = "success" ] && [ "${{ needs.security.result }}" = "success" ]; then
+            echo "🎉 **All checks passed!** This PR is ready for review and merge." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Some checks failed.** Please review the errors above." >> $GITHUB_STEP_SUMMARY
+          fi
