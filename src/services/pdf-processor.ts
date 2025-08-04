@@ -8,6 +8,23 @@ import { getConfig } from '../config/server-config.js';
 export class PDFProcessor {
   private config = getConfig();
 
+  private formatDate(dateValue: any): string | undefined {
+    if (!dateValue) return undefined;
+    
+    // If it's already a Date object
+    if (dateValue instanceof Date) {
+      return dateValue.toISOString();
+    }
+    
+    // If it's a string, try to parse it
+    if (typeof dateValue === 'string') {
+      const parsed = new Date(dateValue);
+      return isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
+    }
+    
+    return undefined;
+  }
+
   async extractText(filePath: string, preserveFormatting: boolean = true): Promise<{
     text: string;
     pageCount: number;
@@ -32,8 +49,8 @@ export class PDFProcessor {
       subject: pdfData.info?.Subject || undefined,
       creator: pdfData.info?.Creator || undefined,
       producer: pdfData.info?.Producer || undefined,
-      creation_date: pdfData.info?.CreationDate?.toISOString() || undefined,
-      modification_date: pdfData.info?.ModDate?.toISOString() || undefined,
+      creation_date: this.formatDate(pdfData.info?.CreationDate) || undefined,
+      modification_date: this.formatDate(pdfData.info?.ModDate) || undefined,
       page_count: pdfData.numpages,
       pdf_version: pdfData.version || '1.4',
       file_size_bytes: stats.size
@@ -66,8 +83,8 @@ export class PDFProcessor {
       subject: pdfData.info?.Subject || undefined,
       creator: pdfData.info?.Creator || undefined,
       producer: pdfData.info?.Producer || undefined,
-      creation_date: pdfData.info?.CreationDate?.toISOString() || undefined,
-      modification_date: pdfData.info?.ModDate?.toISOString() || undefined,
+      creation_date: this.formatDate(pdfData.info?.CreationDate) || undefined,
+      modification_date: this.formatDate(pdfData.info?.ModDate) || undefined,
       page_count: pdfData.numpages,
       pdf_version: pdfData.version || '1.4',
       file_size_bytes: stats.size
@@ -75,14 +92,13 @@ export class PDFProcessor {
   }
 
   async extractPages(filePath: string, pageRange: string, outputFormat: 'text' | 'structured' = 'text'): Promise<{
-    content: string;
-    pages: number[];
-    total_pages: number;
-    output_format: string;
-    processingTimeMs: number;
+    pages: Array<{
+      page_number: number;
+      content: string;
+      word_count: number;
+    }>;
+    total_pages_extracted: number;
   }> {
-    const startTime = Date.now();
-    
     await validatePDFFile(filePath);
     
     const buffer = await fs.readFile(filePath);
@@ -93,22 +109,38 @@ export class PDFProcessor {
 
     const requestedPages = parsePageRange(pageRange, pdfData.numpages);
     
-    // Note: pdf-parse doesn't support extracting specific pages
-    // For now, we'll return the full text with a note about the requested pages
-    let content = pdfData.text;
-    
-    if (outputFormat === 'structured') {
-      content = `Pages ${requestedPages.join(', ')} of ${pdfData.numpages}:\n\n${content}`;
+    if (!requestedPages || !Array.isArray(requestedPages)) {
+      throw new Error(`Invalid page range result: ${pageRange}`);
     }
-
-    const processingTimeMs = Date.now() - startTime;
+    
+    // Note: pdf-parse doesn't support extracting specific pages
+    // For now, we'll simulate page extraction by dividing the text
+    const lines = pdfData.text.split('\n');
+    const linesPerPage = Math.max(1, Math.floor(lines.length / pdfData.numpages));
+    
+    const pages = requestedPages.map((pageNum) => {
+      const startLine = (pageNum - 1) * linesPerPage;
+      const endLine = Math.min(startLine + linesPerPage, lines.length);
+      const pageContent = lines.slice(startLine, endLine).join('\n');
+      
+      if (outputFormat === 'structured') {
+        return {
+          page_number: pageNum,
+          content: `Page ${pageNum}:\n\n${pageContent}`,
+          word_count: pageContent.split(/\s+/).filter(word => word.length > 0).length
+        };
+      } else {
+        return {
+          page_number: pageNum,
+          content: pageContent,
+          word_count: pageContent.split(/\s+/).filter(word => word.length > 0).length
+        };
+      }
+    });
 
     return {
-      content,
-      pages: requestedPages,
-      total_pages: pdfData.numpages,
-      output_format: outputFormat,
-      processingTimeMs
+      pages,
+      total_pages_extracted: requestedPages.length
     };
   }
 
@@ -129,6 +161,7 @@ export class PDFProcessor {
         pdf_version: pdfData.version || '1.4',
         is_encrypted: false, // pdf-parse can handle basic PDFs
         is_readable: true,
+        page_count: pdfData.numpages,
         file_size_bytes: stats.size
       };
     } catch (error) {

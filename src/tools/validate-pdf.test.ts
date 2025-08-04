@@ -3,6 +3,7 @@ import { validatePDFTool, handleValidatePDF } from './validate-pdf.js';
 import { PDFProcessor } from '../services/pdf-processor.js';
 import { ValidatePDFParamsSchema } from '../types/mcp-types.js';
 import { ValidationError } from '../utils/validation.js';
+import { TestFixtures, getTestFixturePath } from '../utils/test-helpers.js';
 
 // Mock PDFProcessor
 vi.mock('../services/pdf-processor.js');
@@ -69,11 +70,11 @@ describe('Validate PDF Tool', () => {
     it('should validate PDF successfully', async () => {
       mockPDFProcessor.validatePDF.mockResolvedValue(mockValidationResult);
 
-      const args = { file_path: 'src/test-fixtures/sample.pdf' };
+      const args = { file_path: TestFixtures.SAMPLE_PDF() };
       const result = await handleValidatePDF(args);
 
       expect(PDFProcessor).toHaveBeenCalled();
-      expect(mockPDFProcessor.validatePDF).toHaveBeenCalledWith('src/test-fixtures/sample.pdf');
+      expect(mockPDFProcessor.validatePDF).toHaveBeenCalledWith(TestFixtures.SAMPLE_PDF());
       expect(result).toEqual(mockValidationResult);
     });
 
@@ -92,7 +93,7 @@ describe('Validate PDF Tool', () => {
       
       mockPDFProcessor.validatePDF.mockResolvedValue(encryptedResult);
 
-      const args = { file_path: 'src/test-fixtures/encrypted.pdf' };
+      const args = { file_path: getTestFixturePath('src/test-fixtures/encrypted.pdf') };
       const result = await handleValidatePDF(args);
 
       expect(result.is_encrypted).toBe(true);
@@ -113,7 +114,7 @@ describe('Validate PDF Tool', () => {
       
       mockPDFProcessor.validatePDF.mockResolvedValue(corruptedResult);
 
-      const args = { file_path: 'src/test-fixtures/corrupted.pdf' };
+      const args = { file_path: getTestFixturePath('src/test-fixtures/corrupted.pdf') };
       const result = await handleValidatePDF(args);
 
       expect(result.is_valid).toBe(false);
@@ -138,7 +139,7 @@ describe('Validate PDF Tool', () => {
       const processingError = new Error('PDF validation failed');
       mockPDFProcessor.validatePDF.mockRejectedValue(processingError);
 
-      const args = { file_path: 'src/test-fixtures/sample.pdf' };
+      const args = { file_path: TestFixtures.SAMPLE_PDF() };
       
       try {
         await handleValidatePDF(args);
@@ -239,7 +240,7 @@ describe('Validate PDF Tool', () => {
       
       mockPDFProcessor.validatePDF.mockResolvedValue(largeFileResult);
 
-      const args = { file_path: 'src/test-fixtures/huge.pdf' };
+      const args = { file_path: getTestFixturePath('src/test-fixtures/huge.pdf') };
       const result = await handleValidatePDF(args);
 
       expect(result.file_size_bytes).toBe(Number.MAX_SAFE_INTEGER);
@@ -264,7 +265,7 @@ describe('Validate PDF Tool', () => {
       
       mockPDFProcessor.validatePDF.mockResolvedValue(unusualResult);
 
-      const args = { file_path: 'src/test-fixtures/unusual.pdf' };
+      const args = { file_path: getTestFixturePath('src/test-fixtures/unusual.pdf') };
       const result = await handleValidatePDF(args);
 
       expect(result.is_valid).toBe(true);
@@ -278,7 +279,7 @@ describe('Validate PDF Tool', () => {
       const testError = new Error('Test validation error');
       mockPDFProcessor.validatePDF.mockRejectedValue(testError);
 
-      const args = { file_path: 'src/test-fixtures/sample.pdf' };
+      const args = { file_path: TestFixtures.SAMPLE_PDF() };
       
       try {
         await handleValidatePDF(args);
@@ -291,7 +292,7 @@ describe('Validate PDF Tool', () => {
         expect(errorData).toHaveProperty('message');
         expect(errorData).toHaveProperty('data');
         expect(errorData.data).toHaveProperty('error_type');
-        expect(errorData.data.file_path).toBe('src/test-fixtures/sample.pdf');
+        expect(errorData.data.file_path).toBe(TestFixtures.SAMPLE_PDF());
       }
     });
 
@@ -304,7 +305,7 @@ describe('Validate PDF Tool', () => {
     it('should provide comprehensive validation results', async () => {
       mockPDFProcessor.validatePDF.mockResolvedValue(mockValidationResult);
 
-      const args = { file_path: 'src/test-fixtures/comprehensive.pdf' };
+      const args = { file_path: getTestFixturePath('src/test-fixtures/comprehensive.pdf') };
       const result = await handleValidatePDF(args);
 
       // Verify all expected fields are present

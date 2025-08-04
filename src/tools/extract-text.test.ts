@@ -3,6 +3,7 @@ import { extractTextTool, handleExtractText } from './extract-text.js';
 import { PDFProcessor } from '../services/pdf-processor.js';
 import { ExtractTextParamsSchema } from '../types/mcp-types.js';
 import { ValidationError } from '../utils/validation.js';
+import { TestFixtures } from '../utils/test-helpers.js';
 
 // Mock PDFProcessor
 vi.mock('../services/pdf-processor.js');
@@ -67,12 +68,12 @@ describe('Extract Text Tool', () => {
     it('should extract text successfully with minimal parameters', async () => {
       mockPDFProcessor.extractText.mockResolvedValue(mockProcessorResult);
 
-      const args = { file_path: 'src/test-fixtures/sample.pdf' };
+      const args = { file_path: TestFixtures.SAMPLE_PDF() };
       const result = await handleExtractText(args);
 
       expect(PDFProcessor).toHaveBeenCalled();
       expect(mockPDFProcessor.extractText).toHaveBeenCalledWith(
-        'src/test-fixtures/sample.pdf',
+        TestFixtures.SAMPLE_PDF(),
         true // default preserve_formatting
       );
       
@@ -88,7 +89,7 @@ describe('Extract Text Tool', () => {
       mockPDFProcessor.extractText.mockResolvedValue(mockProcessorResult);
 
       const args = {
-        file_path: 'src/test-fixtures/sample.pdf',
+        file_path: TestFixtures.SAMPLE_PDF(),
         include_metadata: true
       };
       
@@ -101,14 +102,14 @@ describe('Extract Text Tool', () => {
       mockPDFProcessor.extractText.mockResolvedValue(mockProcessorResult);
 
       const args = {
-        file_path: 'src/test-fixtures/sample.pdf',
+        file_path: TestFixtures.SAMPLE_PDF(),
         preserve_formatting: false
       };
       
       await handleExtractText(args);
       
       expect(mockPDFProcessor.extractText).toHaveBeenCalledWith(
-        'src/test-fixtures/sample.pdf',
+        TestFixtures.SAMPLE_PDF(),
         false
       );
     });
@@ -123,7 +124,7 @@ describe('Extract Text Tool', () => {
       const processingError = new Error('PDF processing failed');
       mockPDFProcessor.extractText.mockRejectedValue(processingError);
 
-      const args = { file_path: 'src/test-fixtures/sample.pdf' };
+      const args = { file_path: TestFixtures.SAMPLE_PDF() };
       
       await expect(handleExtractText(args)).rejects.toThrow();
     });
@@ -132,7 +133,7 @@ describe('Extract Text Tool', () => {
       const validationError = new ValidationError('Invalid file path', 'INVALID_PATH');
       mockPDFProcessor.extractText.mockRejectedValue(validationError);
 
-      const args = { file_path: 'src/test-fixtures/invalid.pdf' };
+      const args = { file_path: TestFixtures.INVALID_PDF() };
       
       await expect(handleExtractText(args)).rejects.toThrow();
     });
@@ -141,10 +142,10 @@ describe('Extract Text Tool', () => {
   describe('Parameter Validation', () => {
     it('should accept valid page range formats', () => {
       const validParams = [
-        { file_path: 'src/test-fixtures/valid.pdf', pages: 'all' },
-        { file_path: 'src/test-fixtures/valid.pdf', pages: '1-5' },
-        { file_path: 'src/test-fixtures/valid.pdf', pages: '1,3,5' },
-        { file_path: 'src/test-fixtures/valid.pdf', pages: '1-2,4,6-8' }
+        { file_path: TestFixtures.VALID_PDF(), pages: 'all' },
+        { file_path: TestFixtures.VALID_PDF(), pages: '1-5' },
+        { file_path: TestFixtures.VALID_PDF(), pages: '1,3,5' },
+        { file_path: TestFixtures.VALID_PDF(), pages: '1-2,4,6-8' }
       ];
 
       validParams.forEach(params => {
@@ -159,7 +160,7 @@ describe('Extract Text Tool', () => {
     });
 
     it('should apply default values correctly', () => {
-      const minimalParams = { file_path: 'src/test-fixtures/valid.pdf' };
+      const minimalParams = { file_path: TestFixtures.VALID_PDF() };
       const parsed = ExtractTextParamsSchema.parse(minimalParams);
       
       expect(parsed.preserve_formatting).toBe(true);

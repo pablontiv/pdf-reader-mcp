@@ -3,6 +3,7 @@ import { extractMetadataTool, handleExtractMetadata } from './extract-metadata.j
 import { MetadataParser } from '../services/metadata-parser.js';
 import { ExtractMetadataParamsSchema } from '../types/mcp-types.js';
 import { ValidationError } from '../utils/validation.js';
+import { TestFixtures, getTestFixturePath } from '../utils/test-helpers.js';
 
 // Mock MetadataParser
 vi.mock('../services/metadata-parser.js');
@@ -67,11 +68,11 @@ describe('Extract Metadata Tool', () => {
     it('should extract metadata successfully', async () => {
       mockMetadataParser.parseMetadata.mockResolvedValue(mockMetadata);
 
-      const args = { file_path: 'src/test-fixtures/sample.pdf' };
+      const args = { file_path: TestFixtures.SAMPLE_PDF() };
       const result = await handleExtractMetadata(args);
 
       expect(MetadataParser).toHaveBeenCalled();
-      expect(mockMetadataParser.parseMetadata).toHaveBeenCalledWith('src/test-fixtures/sample.pdf');
+      expect(mockMetadataParser.parseMetadata).toHaveBeenCalledWith(TestFixtures.SAMPLE_PDF());
       expect(result).toEqual(mockMetadata);
     });
 
@@ -91,7 +92,7 @@ describe('Extract Metadata Tool', () => {
       const processingError = new Error('Metadata extraction failed');
       mockMetadataParser.parseMetadata.mockRejectedValue(processingError);
 
-      const args = { file_path: 'src/test-fixtures/sample.pdf' };
+      const args = { file_path: TestFixtures.SAMPLE_PDF() };
       
       try {
         await handleExtractMetadata(args);
@@ -120,7 +121,7 @@ describe('Extract Metadata Tool', () => {
       const fileError = new Error('ENOENT: no such file or directory');
       mockMetadataParser.parseMetadata.mockRejectedValue(fileError);
 
-      const args = { file_path: 'src/test-fixtures/nonexistent.pdf' };
+      const args = { file_path: getTestFixturePath('src/test-fixtures/nonexistent.pdf') };
       
       await expect(handleExtractMetadata(args)).rejects.toThrow();
     });
@@ -165,7 +166,7 @@ describe('Extract Metadata Tool', () => {
       const testError = new Error('Test error');
       mockMetadataParser.parseMetadata.mockRejectedValue(testError);
 
-      const args = { file_path: 'src/test-fixtures/sample.pdf' };
+      const args = { file_path: TestFixtures.SAMPLE_PDF() };
       
       try {
         await handleExtractMetadata(args);
