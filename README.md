@@ -6,6 +6,10 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![npm package](https://img.shields.io/badge/npm-package-orange)](https://www.npmjs.com/)
 
+<a href="https://glama.ai/mcp/servers/@pablontiv/pdf-reader-mcp">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@pablontiv/pdf-reader-mcp/badge" alt="PDF Reader Server MCP server" />
+</a>
+
 A Model Context Protocol (MCP) server for extracting and processing content from PDF documents. This server provides secure, efficient, and flexible PDF content extraction capabilities following the MCP specification.
 
 ## Features
@@ -76,7 +80,7 @@ This MCP server can be used with various AI applications and development tools. 
 
 Add this configuration to your Claude Desktop config file:
 
-**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`  
 **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
 
 ```json
