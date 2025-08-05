@@ -5,16 +5,17 @@ import {
   ExtractPagesParamsSchema,
   ValidatePDFParamsSchema
 } from './mcp-types.js';
+import { TestFixtures } from '../utils/test-helpers.js';
 import { z } from 'zod';
 
 describe('MCP Types Validation', () => {
   describe('ExtractTextParamsSchema', () => {
     it('should validate minimal valid parameters', () => {
-      const validParams = { file_path: 'src/test-fixtures/document.pdf' };
+      const validParams = { file_path: TestFixtures.DOCUMENT_PDF() };
       
       const result = ExtractTextParamsSchema.parse(validParams);
       
-      expect(result.file_path).toBe('src/test-fixtures/document.pdf');
+      expect(result.file_path).toBe(TestFixtures.DOCUMENT_PDF());
       expect(result.preserve_formatting).toBe(true); // default
       expect(result.include_metadata).toBe(false); // default
       expect(result.pages).toBe('all'); // default
@@ -22,7 +23,7 @@ describe('MCP Types Validation', () => {
 
     it('should validate all parameters with explicit values', () => {
       const validParams = {
-        file_path: 'src/test-fixtures/document.pdf',
+        file_path: TestFixtures.DOCUMENT_PDF(),
         pages: '1-5',
         preserve_formatting: false,
         include_metadata: true
@@ -30,7 +31,7 @@ describe('MCP Types Validation', () => {
       
       const result = ExtractTextParamsSchema.parse(validParams);
       
-      expect(result.file_path).toBe('src/test-fixtures/document.pdf');
+      expect(result.file_path).toBe(TestFixtures.DOCUMENT_PDF());
       expect(result.pages).toBe('1-5');
       expect(result.preserve_formatting).toBe(false);
       expect(result.include_metadata).toBe(true);
@@ -102,11 +103,11 @@ describe('MCP Types Validation', () => {
 
   describe('ExtractMetadataParamsSchema', () => {
     it('should validate valid file path', () => {
-      const validParams = { file_path: 'src/test-fixtures/document.pdf' };
+      const validParams = { file_path: TestFixtures.DOCUMENT_PDF() };
       
       const result = ExtractMetadataParamsSchema.parse(validParams);
       
-      expect(result.file_path).toBe('src/test-fixtures/document.pdf');
+      expect(result.file_path).toBe(TestFixtures.DOCUMENT_PDF());
     });
 
     it('should accept various file path formats', () => {
@@ -165,20 +166,20 @@ describe('MCP Types Validation', () => {
   describe('ExtractPagesParamsSchema', () => {
     it('should validate required parameters', () => {
       const validParams = {
-        file_path: 'src/test-fixtures/document.pdf',
+        file_path: TestFixtures.DOCUMENT_PDF(),
         page_range: '1-5'
       };
       
       const result = ExtractPagesParamsSchema.parse(validParams);
       
-      expect(result.file_path).toBe('src/test-fixtures/document.pdf');
+      expect(result.file_path).toBe(TestFixtures.DOCUMENT_PDF());
       expect(result.page_range).toBe('1-5');
       expect(result.output_format).toBe('text'); // default
     });
 
     it('should validate with explicit output format', () => {
       const validParams = {
-        file_path: 'src/test-fixtures/document.pdf',
+        file_path: TestFixtures.DOCUMENT_PDF(),
         page_range: '1,3,5',
         output_format: 'structured' as const
       };
@@ -250,11 +251,11 @@ describe('MCP Types Validation', () => {
 
   describe('ValidatePDFParamsSchema', () => {
     it('should validate valid file path', () => {
-      const validParams = { file_path: 'src/test-fixtures/document.pdf' };
+      const validParams = { file_path: TestFixtures.DOCUMENT_PDF() };
       
       const result = ValidatePDFParamsSchema.parse(validParams);
       
-      expect(result.file_path).toBe('src/test-fixtures/document.pdf');
+      expect(result.file_path).toBe(TestFixtures.DOCUMENT_PDF());
     });
 
     it('should accept various file path formats', () => {
@@ -314,31 +315,31 @@ describe('MCP Types Validation', () => {
 
   describe('Schema Consistency', () => {
     it('should all require file_path parameter', () => {
-      const schemas = [
-        ExtractTextParamsSchema,
-        ExtractMetadataParamsSchema,
-        ExtractPagesParamsSchema,
-        ValidatePDFParamsSchema
+      const testCases = [
+        { schema: ExtractTextParamsSchema, validParams: { file_path: '/test.pdf' } },
+        { schema: ExtractMetadataParamsSchema, validParams: { file_path: '/test.pdf' } },
+        { schema: ExtractPagesParamsSchema, validParams: { file_path: '/test.pdf', page_range: '1-2' } },
+        { schema: ValidatePDFParamsSchema, validParams: { file_path: '/test.pdf' } }
       ];
 
-      schemas.forEach(schema => {
+      testCases.forEach(({ schema, validParams }) => {
         expect(() => schema.parse({})).toThrow(z.ZodError);
-        expect(() => schema.parse({ file_path: '/test.pdf' })).not.toThrow();
+        expect(() => schema.parse(validParams)).not.toThrow();
       });
     });
 
     it('should all validate file_path as string', () => {
-      const schemas = [
-        ExtractTextParamsSchema,
-        ExtractMetadataParamsSchema,
-        ExtractPagesParamsSchema,
-        ValidatePDFParamsSchema
+      const testCases = [
+        { schema: ExtractTextParamsSchema, validParams: { file_path: '/valid/path.pdf' } },
+        { schema: ExtractMetadataParamsSchema, validParams: { file_path: '/valid/path.pdf' } },
+        { schema: ExtractPagesParamsSchema, validParams: { file_path: '/valid/path.pdf', page_range: '1-2' } },
+        { schema: ValidatePDFParamsSchema, validParams: { file_path: '/valid/path.pdf' } }
       ];
 
-      schemas.forEach(schema => {
-        expect(() => schema.parse({ file_path: 123 })).toThrow(z.ZodError);
-        expect(() => schema.parse({ file_path: true })).toThrow(z.ZodError);
-        expect(() => schema.parse({ file_path: '/valid/path.pdf' })).not.toThrow();
+      testCases.forEach(({ schema, validParams }) => {
+        expect(() => schema.parse({ ...validParams, file_path: 123 })).toThrow(z.ZodError);
+        expect(() => schema.parse({ ...validParams, file_path: true })).toThrow(z.ZodError);
+        expect(() => schema.parse(validParams)).not.toThrow();
       });
     });
 

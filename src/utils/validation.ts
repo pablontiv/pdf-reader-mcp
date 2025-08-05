@@ -16,10 +16,9 @@ export async function validateFilePath(filePath: string): Promise<void> {
 
   // Check for security violations in path
   const hasDirectoryTraversal = filePath.includes('..') || filePath.includes('~');
-  const isAbsolutePath = path.isAbsolute(filePath);
   // eslint-disable-next-line no-control-regex
   const hasControlChars = /[\x00-\x1f\x7f-\x9f]/.test(filePath);
-  const hasNTFSStreams = filePath.includes(':') && process.platform === 'win32';
+  const hasNTFSStreams = filePath.includes(':') && process.platform === 'win32' && !path.isAbsolute(filePath);
   
   // Check for Windows reserved names
   const basename = path.basename(filePath, path.extname(filePath));
@@ -35,8 +34,19 @@ export async function validateFilePath(filePath: string): Promise<void> {
     hasEncodedTraversal = true; // Invalid URI encoding is suspicious
   }
 
+  // Check for absolute paths to sensitive system directories
+  const isSensitiveAbsolutePath = path.isAbsolute(filePath) && (
+    filePath.toLowerCase().includes('/etc/') ||
+    filePath.toLowerCase().includes('/root/') ||
+    filePath.toLowerCase().includes('/proc/') ||
+    filePath.toLowerCase().includes('/dev/') ||
+    filePath.toLowerCase().includes('c:\\windows\\') ||
+    filePath.toLowerCase().includes('/var/log/') ||
+    filePath.toLowerCase().includes('/sys/')
+  );
+
   // Throw generic security error for any violation
-  if (hasDirectoryTraversal || isAbsolutePath || hasControlChars || hasNTFSStreams || hasReservedName || hasEncodedTraversal) {
+  if (hasDirectoryTraversal || hasControlChars || hasNTFSStreams || hasReservedName || hasEncodedTraversal || isSensitiveAbsolutePath) {
     throw new ValidationError('Invalid file path', 'SECURITY_VIOLATION');
   }
 

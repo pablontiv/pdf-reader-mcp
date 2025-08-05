@@ -53,6 +53,7 @@ export interface ValidationResult {
   pdf_version?: string;
   is_encrypted: boolean;
   is_readable: boolean;
+  page_count?: number;
   error_message?: string;
   file_size_bytes: number;
 }

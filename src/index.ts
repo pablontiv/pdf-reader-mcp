@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+// Note: pdf-parse library may output "Warning: Indexing all PDF objects" to stderr
+// This is a harmless informational message from the native PDF parsing library
+
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {

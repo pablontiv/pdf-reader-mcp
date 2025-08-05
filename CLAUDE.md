@@ -50,6 +50,9 @@ The server provides 4 main tools:
 - `winston` - Structured logging
 - `@modelcontextprotocol/sdk` - MCP framework
 
+### Known Issues
+- **PDF-Parse Warning**: The `pdf-parse` library may output "Warning: Indexing all PDF objects" to stderr during initialization. This is a harmless informational message from the native PDF parsing library and can be safely ignored. To suppress it when running the server, redirect stderr: `node dist/index.js 2>/dev/null`
+
 ### Error Handling
 Uses standardized MCP error codes:
 - `-32602`: Validation errors

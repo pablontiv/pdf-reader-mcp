@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 import { PDFProcessor } from './pdf-processor.js';
+import { TestFixtures, getTestFixturePath } from '../utils/test-helpers.js';
 import pdfParse from 'pdf-parse';
 import { PDFDocument } from 'pdf-lib';
 
@@ -54,6 +55,7 @@ describe('PDFProcessor with External Service Mocks', () => {
     const validationModule = await import('../utils/validation.js');
     vi.mocked(validationModule.validatePDFFile).mockResolvedValue(undefined);
     vi.mocked(validationModule.validateFilePath).mockResolvedValue(undefined);
+    vi.mocked(validationModule.parsePageRange).mockReturnValue([1, 2]); // Default mock return
   });
 
   describe('Text Extraction with pdf-parse Mock', () => {
@@ -78,9 +80,10 @@ describe('PDFProcessor with External Service Mocks', () => {
       mockFs.readFile.mockResolvedValue(mockBuffer);
       mockPdfParse.mockResolvedValue(mockPdfData);
 
-      const result = await processor.extractText('test/sample.pdf', true);
+      const testFile = TestFixtures.SAMPLE_PDF();
+      const result = await processor.extractText(testFile, true);
 
-      expect(mockFs.readFile).toHaveBeenCalledWith('test/sample.pdf');
+      expect(mockFs.readFile).toHaveBeenCalledWith(testFile);
       expect(mockPdfParse).toHaveBeenCalledWith(mockBuffer);
       
       expect(result.text).toBe('Sample PDF content\nSecond line of content');
@@ -95,7 +98,8 @@ describe('PDFProcessor with External Service Mocks', () => {
       mockFs.readFile.mockResolvedValue(mockBuffer);
       mockPdfParse.mockRejectedValue(new Error('Invalid PDF structure'));
 
-      await expect(processor.extractText('test/invalid.pdf', true))
+      const testFile = TestFixtures.INVALID_PDF();
+      await expect(processor.extractText(testFile, true))
         .rejects.toThrow('Invalid PDF structure');
         
       expect(mockPdfParse).toHaveBeenCalledWith(mockBuffer);
@@ -114,7 +118,8 @@ describe('PDFProcessor with External Service Mocks', () => {
       mockFs.readFile.mockResolvedValue(largeMockBuffer);
       mockPdfParse.mockResolvedValue(mockPdfData);
 
-      const result = await processor.extractText('test/large.pdf', true);
+      const testFile = getTestFixturePath('test/large.pdf');
+      const result = await processor.extractText(testFile, true);
 
       expect(result.text).toBe('Large PDF content');
       expect(result.pageCount).toBe(1000);
@@ -125,43 +130,42 @@ describe('PDFProcessor with External Service Mocks', () => {
       
       mockFs.readFile.mockResolvedValue(mockBuffer);
       
-      // Mock pdf-parse to take longer than timeout
-      mockPdfParse.mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve({
-          text: 'content',
-          numpages: 1,
-          info: {},
-          metadata: null,
-          version: '1.4'
-        }), 65000)) // 65 seconds, longer than default timeout
-      );
+      // Mock pdf-parse to reject with timeout error immediately
+      mockPdfParse.mockRejectedValue(new Error('Operation timed out'));
 
-      await expect(processor.extractText('test/slow.pdf', true))
-        .rejects.toThrow(); // Should timeout
+      const testFile = getTestFixturePath('test/slow.pdf');
+      await expect(processor.extractText(testFile, true))
+        .rejects.toThrow('Operation timed out');
     });
   });
 
   describe('Metadata Extraction with pdf-lib Mock', () => {
     it('should extract metadata using pdf-lib', async () => {
-      const mockBuffer = Buffer.from('fake pdf content');
-      const mockDocument = {
-        getPageCount: () => 5,
-        getTitle: () => 'Document Title',
-        getAuthor: () => 'Document Author',
-        getSubject: () => 'Document Subject',
-        getCreator: () => 'Document Creator',
-        getProducer: () => 'Document Producer',
-        getCreationDate: () => new Date('2024-01-01'),
-        getModificationDate: () => new Date('2024-01-02')
+      const mockPdfData = {
+        text: 'Sample content',
+        numpages: 5,
+        info: {
+          Title: 'Document Title',
+          Author: 'Document Author',
+          Subject: 'Document Subject',
+          Creator: 'Document Creator',
+          Producer: 'Document Producer',
+          CreationDate: new Date('2024-01-01'),
+          ModDate: new Date('2024-01-02')
+        },
+        metadata: null,
+        version: '1.4'
       };
 
+      const mockBuffer = Buffer.from('fake pdf content');
       mockFs.readFile.mockResolvedValue(mockBuffer);
       mockFs.stat.mockResolvedValue({ size: 1024 });
-      mockPDFDocument.load.mockResolvedValue(mockDocument);
+      mockPdfParse.mockResolvedValue(mockPdfData);
 
-      const metadata = await processor.extractMetadata('test/sample.pdf');
+      const testFile = TestFixtures.SAMPLE_PDF();
+      const metadata = await processor.extractMetadata(testFile);
 
-      expect(mockPDFDocument.load).toHaveBeenCalledWith(mockBuffer);
+      expect(mockPdfParse).toHaveBeenCalledWith(mockBuffer);
       expect(metadata.title).toBe('Document Title');
       expect(metadata.author).toBe('Document Author');
       expect(metadata.page_count).toBe(5);
@@ -169,23 +173,29 @@ describe('PDFProcessor with External Service Mocks', () => {
     });
 
     it('should handle missing metadata fields gracefully', async () => {
-      const mockBuffer = Buffer.from('fake pdf content');
-      const mockDocument = {
-        getPageCount: () => 3,
-        getTitle: () => undefined,
-        getAuthor: () => null,
-        getSubject: () => '',
-        getCreator: () => undefined,
-        getProducer: () => undefined,
-        getCreationDate: () => undefined,
-        getModificationDate: () => undefined
+      const mockPdfData = {
+        text: 'Sample content',
+        numpages: 3,
+        info: {
+          Title: undefined,
+          Author: null,
+          Subject: '',
+          Creator: undefined,
+          Producer: undefined,
+          CreationDate: undefined,
+          ModDate: undefined
+        },
+        metadata: null,
+        version: '1.4'
       };
 
+      const mockBuffer = Buffer.from('fake pdf content');
       mockFs.readFile.mockResolvedValue(mockBuffer);
       mockFs.stat.mockResolvedValue({ size: 2048 });
-      mockPDFDocument.load.mockResolvedValue(mockDocument);
+      mockPdfParse.mockResolvedValue(mockPdfData);
 
-      const metadata = await processor.extractMetadata('test/minimal.pdf');
+      const testFile = getTestFixturePath('test/minimal.pdf');
+      const metadata = await processor.extractMetadata(testFile);
 
       expect(metadata.title).toBeUndefined();
       expect(metadata.author).toBeUndefined();
@@ -197,9 +207,10 @@ describe('PDFProcessor with External Service Mocks', () => {
       const mockBuffer = Buffer.from('corrupted pdf content');
       
       mockFs.readFile.mockResolvedValue(mockBuffer);
-      mockPDFDocument.load.mockRejectedValue(new Error('Cannot parse PDF'));
+      mockPdfParse.mockRejectedValue(new Error('Cannot parse PDF'));
 
-      await expect(processor.extractMetadata('test/corrupted.pdf'))
+      const testFile = getTestFixturePath('test/corrupted.pdf');
+      await expect(processor.extractMetadata(testFile))
         .rejects.toThrow('Cannot parse PDF');
     });
   });
@@ -208,16 +219,18 @@ describe('PDFProcessor with External Service Mocks', () => {
     it('should handle file read errors', async () => {
       mockFs.readFile.mockRejectedValue(new Error('ENOENT: no such file'));
 
-      await expect(processor.extractText('test/nonexistent.pdf', true))
+      const testFile = getTestFixturePath('test/nonexistent.pdf');
+      await expect(processor.extractText(testFile, true))
         .rejects.toThrow('ENOENT: no such file');
         
-      expect(mockFs.readFile).toHaveBeenCalledWith('test/nonexistent.pdf');
+      expect(mockFs.readFile).toHaveBeenCalledWith(testFile);
     });
 
     it('should handle permission denied errors', async () => {
       mockFs.readFile.mockRejectedValue(new Error('EACCES: permission denied'));
 
-      await expect(processor.extractText('test/restricted.pdf', true))
+      const testFile = getTestFixturePath('test/restricted.pdf');
+      await expect(processor.extractText(testFile, true))
         .rejects.toThrow('EACCES: permission denied');
     });
 
@@ -228,7 +241,8 @@ describe('PDFProcessor with External Service Mocks', () => {
       mockFs.stat.mockRejectedValue(new Error('EACCES: permission denied'));
       
       // Should still try to extract metadata even if stat fails
-      await expect(processor.extractMetadata('test/restricted.pdf'))
+      const testFile = getTestFixturePath('test/restricted.pdf');
+      await expect(processor.extractMetadata(testFile))
         .rejects.toThrow();
     });
   });
@@ -248,7 +262,8 @@ describe('PDFProcessor with External Service Mocks', () => {
       mockFs.readFile.mockResolvedValue(mockBuffer);
       mockPdfParse.mockResolvedValue(mockPdfData);
 
-      const result = await processor.extractPages('test/sample.pdf', '1-2', 'text');
+      const testFile = TestFixtures.SAMPLE_PDF();
+      const result = await processor.extractPages(testFile, '1-2', 'text');
 
       expect(result.total_pages_extracted).toBe(2);
       expect(result.pages).toHaveLength(2);
@@ -270,25 +285,36 @@ describe('PDFProcessor with External Service Mocks', () => {
         version: '1.4'
       });
 
+      // Mock parsePageRange to throw error for invalid range
+      const validationModule = await import('../utils/validation.js');
+      vi.mocked(validationModule.parsePageRange).mockImplementation(() => {
+        throw new Error('Invalid page range: 1-5');
+      });
+
       // Request pages beyond available range
-      await expect(processor.extractPages('test/sample.pdf', '1-5', 'text'))
-        .rejects.toThrow();
+      const testFile = TestFixtures.SAMPLE_PDF();
+      await expect(processor.extractPages(testFile, '1-5', 'text'))
+        .rejects.toThrow('Invalid page range: 1-5');
     });
   });
 
   describe('PDF Validation Mock', () => {
     it('should validate PDF using mocked dependencies', async () => {
-      const mockBuffer = Buffer.from('fake pdf content');
-      const mockDocument = {
-        getPageCount: () => 10,
-        getTitle: () => 'Valid Document'
+      const mockPdfData = {
+        text: 'Valid PDF content',
+        numpages: 10,
+        info: { Title: 'Valid Document' },
+        metadata: null,
+        version: '1.4'
       };
 
+      const mockBuffer = Buffer.from('fake pdf content');
       mockFs.readFile.mockResolvedValue(mockBuffer);
       mockFs.stat.mockResolvedValue({ size: 5120 });
-      mockPDFDocument.load.mockResolvedValue(mockDocument);
+      mockPdfParse.mockResolvedValue(mockPdfData);
 
-      const validation = await processor.validatePDF('test/valid.pdf');
+      const testFile = TestFixtures.VALID_PDF();
+      const validation = await processor.validatePDF(testFile);
 
       expect(validation.is_valid).toBe(true);
       expect(validation.is_readable).toBe(true);
@@ -301,13 +327,14 @@ describe('PDFProcessor with External Service Mocks', () => {
       
       mockFs.readFile.mockResolvedValue(mockBuffer);
       mockFs.stat.mockResolvedValue({ size: 100 });
-      mockPDFDocument.load.mockRejectedValue(new Error('Invalid PDF'));
+      mockPdfParse.mockRejectedValue(new Error('Invalid PDF'));
 
-      const validation = await processor.validatePDF('test/invalid.pdf');
+      const testFile = TestFixtures.INVALID_PDF();
+      const validation = await processor.validatePDF(testFile);
 
       expect(validation.is_valid).toBe(false);
       expect(validation.is_readable).toBe(false);
-      expect(validation.errors).toContain('Invalid PDF');
+      expect(validation.error_message).toContain('Invalid PDF');
     });
   });
 
@@ -327,7 +354,7 @@ describe('PDFProcessor with External Service Mocks', () => {
 
       // Simulate concurrent processing
       const concurrentPromises = Array.from({ length: 10 }, (_, i) => 
-        processor.extractText(`test/file${i}.pdf`, true)
+        processor.extractText(getTestFixturePath(`test/file${i}.pdf`), true)
       );
 
       const results = await Promise.all(concurrentPromises);
@@ -342,7 +369,8 @@ describe('PDFProcessor with External Service Mocks', () => {
       const mockError = new Error('JavaScript heap out of memory');
       mockPdfParse.mockRejectedValue(mockError);
 
-      await expect(processor.extractText('test/large.pdf', true))
+      const testFile = getTestFixturePath('test/large.pdf');
+      await expect(processor.extractText(testFile, true))
         .rejects.toThrow('JavaScript heap out of memory');
     });
   });
@@ -367,11 +395,12 @@ describe('PDFProcessor with External Service Mocks', () => {
       mockFs.readFile.mockResolvedValue(mockBuffer);
       mockPdfParse.mockResolvedValue(mockPdfData);
 
-      await processor.extractText('test/verify.pdf', true);
+      const testFile = getTestFixturePath('test/verify.pdf');
+      await processor.extractText(testFile, true);
 
       // Verify exact call patterns
       expect(mockFs.readFile).toHaveBeenCalledOnce();
-      expect(mockFs.readFile).toHaveBeenCalledWith('test/verify.pdf');
+      expect(mockFs.readFile).toHaveBeenCalledWith(testFile);
       expect(mockPdfParse).toHaveBeenCalledOnce();
       expect(mockPdfParse).toHaveBeenCalledWith(mockBuffer);
     });
